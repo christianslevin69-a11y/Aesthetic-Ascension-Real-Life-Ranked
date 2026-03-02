@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#030303">
+    <link rel="manifest" href='data:application/manifest+json;utf8,{"name":"Aesthetic Ascension","short_name":"Ascension","display":"standalone","background_color":"#030303","theme_color":"#030303"}'>
+    
+    <title>Aesthetic Ascension | V61 Legendary Legacy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@1,500;1,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #030303; 
+            --bg-grad: radial-gradient(circle at top, #141000 0%, #030303 60%);
+            --surface: rgba(15, 15, 15, 0.7); 
+            --surface-light: rgba(25, 25, 25, 0.8);
+            --accent: #d4af37; --accent-dim: rgba(212, 175, 55, 0.15);
+            --blood: #a30000; --border: rgba(212, 175, 55, 0.15); 
+            --water: #00e5ff; --text: #f5f5f5; --text-dim: #888;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        body { background: var(--bg-grad); background-color: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; letter-spacing: -0.01em; }
+        ::-webkit-scrollbar { display: none; }
+
+        /* AD BANNER CONTAINER */
+        #ad-banner-container { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); width: 320px; height: 50px; background: rgba(10,10,10,0.8); border: 1px solid #222; border-radius: 8px; display: flex; justify-content: center; align-items: center; z-index: 900; backdrop-filter: blur(10px); }
+        .ad-placeholder-text { font-family: 'Inter', sans-serif; font-size: 10px; color: #444; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
+
+        /* SIMULADOR DE ANUNCIO PANTALLA COMPLETA */
+        #mock-interstitial { position: fixed; inset: 0; background: #050505; z-index: 99999; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .ad-close-btn { position: absolute; top: 25px; right: 25px; background: rgba(255,255,255,0.1); border: 1px solid #444; color: #fff; width: 35px; height: 35px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        
+        /* PORTAL INTRO */
+        #the-portal { position: fixed; inset: 0; background: #000; z-index: 50000; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; transition: opacity 1.5s ease; }
+        .portal-btn { background: transparent; border: 1px solid var(--accent); color: var(--accent); font-family: 'Cinzel', serif; font-size: 1.2rem; padding: 20px 40px; border-radius: 5px; cursor: pointer; letter-spacing: 4px; text-transform: uppercase; transition: all 0.4s; box-shadow: 0 0 20px rgba(212,175,55,0.2); }
+        .portal-btn:active { transform: scale(0.95); background: var(--accent); color: #000; }
+
+        /* TOAST */
+        #toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: rgba(5,5,5,0.95); border: 1px solid var(--accent); color: var(--accent); padding: 14px 28px; border-radius: 40px; font-size: 11px; font-family: 'Cinzel', serif; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; z-index: 9999; backdrop-filter: blur(15px); transition: bottom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; white-space: nowrap; box-shadow: 0 10px 40px rgba(212,175,55,0.2); }
+        #toast.show { bottom: 150px; } 
+        #toast.blood { border-color: var(--blood); color: #ff4d4d; box-shadow: 0 10px 40px rgba(163,0,0,0.4); }
+
+        /* EPIC RANK UP */
+        #epic-rank-up { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 10000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        #epic-rank-up.active { display: flex; animation: darkFlash 6s forwards; }
+        .epic-title { font-family: 'Cinzel', serif; color: var(--accent); font-size: 13vw; text-shadow: 0 0 50px rgba(212, 175, 55, 0.6); animation: darkRise 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .epic-sub { font-family: 'Inter', sans-serif; color: #777; font-size: 1.2rem; letter-spacing: 8px; text-transform: uppercase; margin-bottom: 15px; opacity: 0; animation: fadeInLate 2s forwards 1s; }
+        @keyframes darkRise { from { transform: scale(0.7); opacity: 0; filter: blur(5px); } to { transform: scale(1); opacity: 1; filter: blur(0); } }
+        @keyframes darkFlash { 0% { background: #111; } 5% { background: rgba(0,0,0,0.98); } 100% { background: rgba(0,0,0,0.98); } }
+        @keyframes fadeInLate { to { opacity: 1; } }
+
+        /* HEADER */
+        .header { padding: 45px 25px 25px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%); z-index: 10; position: relative; }
+        .rank-name { font-family: 'Playfair Display', serif; font-size: 2.6rem; font-style: italic; font-weight: 700; color: var(--accent); margin: 5px 0 5px; text-shadow: 0 0 25px rgba(212,175,55,0.25); }
+        .bar-bg { width: 100%; height: 5px; background: #111; margin: 15px 0 12px; border-radius: 5px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+        .bar-fill { height: 100%; background: linear-gradient(90deg, #8a6300, var(--accent), #fff); transition: width 1.5s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 0 15px var(--accent); }
+        .bar-fill.capped { background: linear-gradient(90deg, #550000, var(--blood), #ff4d4d); box-shadow: 0 0 15px var(--blood); }
+        
+        .rpg-inv { display: flex; justify-content: center; gap: 20px; font-size: 20px; margin-bottom: 15px; }
+        .weapon { opacity: 0.1; filter: grayscale(1); transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform: scale(0.9); }
+        .weapon.unlocked { opacity: 1; filter: grayscale(0); transform: scale(1.2); text-shadow: 0 0 15px rgba(212,175,55,0.6); }
+
+        .btn-agenda { position: absolute; top: 35px; left: 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); color: var(--text-dim); padding: 8px 14px; border-radius: 8px; font-size: 9px; font-family: 'Cinzel', serif; font-weight: 700; cursor: pointer; text-transform: uppercase; transition: 0.3s; letter-spacing: 1.5px; backdrop-filter: blur(5px); }
+        .btn-timer { position: absolute; top: 35px; right: 20px; background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3); color: var(--accent); padding: 8px 14px; border-radius: 8px; font-size: 9px; font-family: 'Cinzel', serif; font-weight: 700; cursor: pointer; transition: 0.3s; letter-spacing: 1px; }
+
+        .btn-boss { display: none; margin: 15px auto 0; padding: 12px 24px; background: rgba(163, 0, 0, 0.15); border: 1px solid var(--blood); color: #ff4d4d; font-family: 'Cinzel', serif; font-size: 11px; font-weight: 900; letter-spacing: 3px; border-radius: 8px; cursor: pointer; text-transform: uppercase; animation: pulseBlood 1.5s infinite alternate; box-shadow: inset 0 0 15px rgba(163,0,0,0.3); }
+        @keyframes pulseBlood { from { box-shadow: 0 0 5px rgba(163,0,0,0.5); } to { box-shadow: 0 0 25px rgba(163,0,0,1); } }
+
+        /* VIEWS & CARDS */
+        .view { display: none; height: calc(100vh - 220px); overflow-y: auto; padding: 20px 25px 160px; position: relative; }
+        .view.active { display: block; animation: fadeUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+        .card { background: var(--surface); border: 1px solid rgba(255,255,255,0.05); border-top: 1px solid rgba(212,175,55,0.2); border-radius: 20px; padding: 25px; margin-bottom: 22px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); backdrop-filter: blur(20px); }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .label { font-family: 'Cinzel', serif; font-size: 10px; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 20px; display: block; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; font-weight: 700; text-shadow: 0 0 10px rgba(212,175,55,0.3); }
+        .lp-tag { color: var(--accent); font-size: 9px; font-family: 'Inter', sans-serif; font-weight: 800; letter-spacing: 1px; background: rgba(212,175,55,0.1); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(212,175,55,0.3); }
+
+        /* EXERCISES */
+        .loc-selector { display: flex; gap: 12px; margin-bottom: 25px; }
+        .loc-btn { flex: 1; padding: 14px; font-size: 10px; background: var(--surface-light); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; color: var(--text-dim); cursor: pointer; font-weight: 800; transition: 0.3s; letter-spacing: 1px; text-transform: uppercase;}
+        .loc-btn.active { color: #fff; border-color: var(--accent); background: var(--accent-dim); box-shadow: inset 0 0 15px rgba(212,175,55,0.15); }
+        
+        .ex-item { padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; justify-content: space-between; align-items: center; }
+        .ex-item:last-child { border-bottom: none; }
+        .ex-info h3 { font-size: 1.1rem; color: #fff; font-weight: 600; margin-bottom: 5px; letter-spacing: -0.01em; }
+        .ex-info p { font-size: 0.8rem; color: var(--text-dim); font-weight: 700; }
+        .pr-group { display: flex; align-items: center; gap: 12px; }
+        
+        .pr-input { background: rgba(0,0,0,0.5); border: 1px solid #222; border-bottom: 2px solid #444; color: var(--accent); width: 55px; padding: 8px 4px; text-align: center; font-size: 1.05rem; font-weight: 700; outline: none; transition: 0.3s; font-family: 'Inter', sans-serif; border-radius: 6px; }
+        .pr-input:focus { border-bottom-color: var(--accent); background: rgba(212, 175, 55, 0.05); }
+        
+        .btn-calc { background: var(--surface-light); border: 1px solid #333; color: #ccc; padding: 10px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .btn-vid { background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.3); color: var(--accent); padding: 10px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; text-decoration: none; transition: 0.2s; }
+
+        /* WATER TRACKER */
+        .grid-track { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 15px; }
+        .cube { width: 36px; height: 48px; border: 1px solid #333; border-radius: 8px; cursor: pointer; position: relative; overflow: hidden; background: rgba(0,0,0,0.5); transition: 0.3s; box-shadow: inset 0 2px 8px rgba(0,0,0,0.8); }
+        .cube .fill { position: absolute; bottom: 0; left: 0; width: 100%; height: 0; background: linear-gradient(180deg, #00e5ff 0%, #005f73 100%); transition: height 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .cube.filled { border-color: rgba(0, 229, 255, 0.6); animation: waterFlash 1s ease forwards; }
+        @keyframes waterFlash { 0% { box-shadow: 0 0 0px var(--water); } 50% { box-shadow: 0 0 20px var(--water); } 100% { box-shadow: 0 0 15px rgba(0, 229, 255, 0.2); } }
+
+        /* BUTTONS */
+        .btn-main { width: 100%; background: linear-gradient(180deg, rgba(212,175,55,0.05) 0%, transparent 100%); border: 1px solid var(--accent); color: var(--accent); padding: 18px; border-radius: 14px; font-size: 11px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; cursor: pointer; margin-top: 25px; transition: 0.2s; box-shadow: 0 5px 15px rgba(212,175,55,0.1); }
+        .btn-main:active { background: var(--accent); color: #000; transform: scale(0.96); }
+        
+        .btn-check { background: transparent; border: 1px solid #333; color: #777; padding: 10px 18px; border-radius: 20px; font-size: 9px; cursor: pointer; font-weight: 800; transition: 0.3s; letter-spacing: 1px; text-transform: uppercase; }
+        .btn-check.done { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); box-shadow: inset 0 0 15px rgba(212,175,55,0.15); }
+
+        /* NAV */
+        .nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; background: rgba(10,10,10,0.9); padding: 12px; border-radius: 50px; border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(25px); z-index: 1000; box-shadow: 0 15px 45px rgba(0,0,0,0.9); }
+        .nav-i { font-family: 'Cinzel', serif; font-size: 8px; color: #777; cursor: pointer; padding: 14px 16px; border-radius: 40px; transition: 0.3s; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+        .nav-i.active { color: #000; background: var(--accent); font-weight: 800; box-shadow: 0 4px 20px rgba(212,175,55,0.4); }
+
+        /* OVERLAYS */
+        #intro, #overlay, #schedule-overlay, #boss-overlay, #custom-modal, #timer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(20px); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 25px; }
+        #intro input, #custom-modal input { background: transparent; border: none; border-bottom: 2px solid #333; color: #fff; text-align: center; font-size: 1.8rem; outline: none; margin-bottom: 30px; font-family: 'Playfair Display'; width: 85%; padding-bottom: 10px; transition: 0.3s; }
+        #intro input:focus, #custom-modal input:focus { border-bottom-color: var(--accent); }
+        
+        .overlay-box { background: rgba(10,10,10,0.95); border: 1px solid rgba(255,255,255,0.05); border-top: 1px solid rgba(212, 175, 55, 0.4); border-radius: 24px; padding: 45px 30px 30px; width: 100%; max-width: 420px; max-height: 85vh; overflow-y: auto; text-align: center; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.9); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .overlay-box.blood-box { border-top-color: var(--blood); border-color: rgba(163,0,0,0.3); box-shadow: 0 25px 60px rgba(163, 0, 0, 0.3); }
+        .overlay-box::-webkit-scrollbar { display: none; }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* CIERRE DE MODAL FIJO (PARA QUE NO SE PIERDA AL HACER SCROLL) */
+        .btn-close { position: fixed; top: 20px; right: 20px; font-size: 1.2rem; color: #fff; background: rgba(0,0,0,0.6); border: 1px solid #444; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; font-family: sans-serif; z-index: 3000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .btn-close:active { transform: scale(0.8); background: var(--accent); color: #000; border-color: var(--accent); }
+
+        /* CALENDARIO DE BATALLA */
+        .cal-labels { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 15px; font-size: 9px; color: #777; text-align: center; font-family: 'Cinzel', serif; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 8px; }
+        .cal-day { aspect-ratio: 1; background: rgba(0,0,0,0.5); border: 1px solid #222; border-radius: 6px; display:flex; justify-content:center; align-items:center; font-size:10px; color:#555; font-weight: 600; transition: 0.3s; }
+        .cal-day.done { background: var(--accent); border-color: #fff; color: #000; box-shadow: 0 0 12px rgba(212,175,55,0.5); font-weight: 800; }
+
+        /* RELICS GRID */
+        .relic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .relic-card { background: rgba(0,0,0,0.4); border: 1px solid #222; border-radius: 12px; padding: 15px 10px; text-align: center; opacity: 0.4; filter: grayscale(1); transition: 0.5s; display: flex; flex-direction: column; justify-content: center; }
+        .relic-card.unlocked { opacity: 1; filter: grayscale(0); border-color: var(--accent); box-shadow: 0 0 15px rgba(212,175,55,0.15); background: linear-gradient(180deg, rgba(212,175,55,0.08) 0%, transparent 100%); }
+        .relic-icon { font-size: 2.2rem; margin-bottom: 8px; }
+        .relic-name { font-family: 'Cinzel', serif; font-size: 9px; color: var(--accent); font-weight: 800; margin-bottom: 5px; letter-spacing: 1px; }
+        .relic-desc { font-size: 0.65rem; color: #888; line-height: 1.3; }
+
+        /* AGENDA TIMELINE MEJORADA */
+        .agenda-timeline { display: flex; flex-direction: column; gap: 16px; text-align: left; margin-top: 5px; padding-bottom: 20px; }
+        .agenda-card { background: rgba(5,5,5,0.8); border: 1px solid #222; border-radius: 16px; padding: 20px; position: relative; transition: 0.3s; }
+        .agenda-card.today { border-color: rgba(212, 175, 55, 0.6); background: linear-gradient(135deg, rgba(212,175,55,0.08) 0%, transparent 100%); box-shadow: 0 5px 25px rgba(212, 175, 55, 0.08); transform: scale(1.02); }
+        .agenda-day-title { font-family: 'Cinzel', serif; font-size: 11px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
+        .agenda-focus { font-size: 1.3rem; color: #fff; margin-bottom: 16px; font-family: 'Playfair Display', serif; font-weight: 700; }
+        .agenda-details { font-size: 0.8rem; color: #aaa; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; line-height: 1.8; }
+        .agenda-details b { color: #ccc; border-bottom: 1px solid #444; padding-bottom: 4px; display: block; margin-bottom: 8px; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; }
+
+    </style>
+</head>
+<body>
+
+<audio id="sfx-portal" src="https://assets.mixkit.co/active_storage/sfx/1427/1427-preview.mp3" preload="auto"></audio>
+<audio id="sfx-click" src="https://assets.mixkit.co/active_storage/sfx/2570/2570-preview.mp3" preload="auto"></audio>
+<audio id="sfx-water" src="https://assets.mixkit.co/active_storage/sfx/1114/1114-preview.mp3" preload="auto"></audio>
+<audio id="sfx-success" src="https://assets.mixkit.co/active_storage/sfx/2570/2570-preview.mp3" preload="auto"></audio>
+<audio id="sfx-rank" src="https://assets.mixkit.co/active_storage/sfx/2573/2573-preview.mp3" preload="auto"></audio>
+<audio id="sfx-alarm" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" preload="auto"></audio>
+
+<div id="toast">Notificación</div>
+
+<div id="epic-rank-up">
+    <span class="epic-sub">Nuevo Poder Desbloqueado</span>
+    <h1 class="epic-title" id="epic-rank-text">ORO I</h1>
+</div>
+
+<div id="the-portal">
+    <h1 style="font-family:'Cinzel', serif; font-size:3.5rem; color:var(--accent); text-shadow:0 0 40px rgba(212,175,55,0.5); margin-bottom: 40px; letter-spacing:8px;">EL TEMPLO</h1>
+    <button class="portal-btn" onclick="openPortal()">Abrir las Puertas</button>
+</div>
+
+<div id="intro" style="display:none;">
+    <div id="intro-step1" style="width:100%; text-align:center;">
+        <span class="label" style="border:none;">Sella tu Identidad</span>
+        <input type="text" id="name-in" placeholder="...">
+        <button class="btn-main" onclick="playSound('click'); document.getElementById('intro-step1').style.display='none'; document.getElementById('intro-step2').style.display='block';">Continuar</button>
+    </div>
+    <div id="intro-step2" style="display:none; width:100%; text-align:center;">
+        <span class="label" style="border:none;">Nivel de Fuerza Inicial</span>
+        <button class="btn-main" style="border-color:#555; color:#aaa;" onclick="initApp('Iniciado')">Iniciado (Básico)</button>
+        <button class="btn-main" onclick="initApp('Guerrero')">Guerrero (Estándar)</button>
+        <button class="btn-main" style="border-color:var(--optional); color:var(--optional);" onclick="initApp('Elite')">Élite (Avanzado)</button>
+    </div>
+</div>
+
+<div id="mock-interstitial">
+    <span style="color:#555; font-size:10px; position:absolute; top:35px; left:25px; letter-spacing:2px;">ADVERTISEMENT</span>
+    <button class="ad-close-btn" onclick="closeAd()">✕</button>
+    <div style="width:80%; padding:40px 20px; border:1px solid #333; border-radius:10px; background:#111;">
+        <h2 style="color:var(--accent); font-family:'Cinzel',serif; margin-bottom:15px;">PUBLICIDAD ACTIVA</h2>
+        <p style="color:#888; font-size:0.9rem; line-height:1.5;">(Start.io / Unity Ads mostrará un video aquí.)</p>
+    </div>
+</div>
+
+<div id="overlay" style="display:none;"><div class="overlay-box"><div class="btn-close" onclick="playSound('click'); document.getElementById('overlay').style.display='none'">✕</div><span class="label">Calculadora de Discos</span><div id="over-content" style="font-size:1.2rem; color:#bbb; line-height:2;"></div></div></div>
+
+<div id="schedule-overlay" style="display:none;">
+    <div class="overlay-box">
+        <div class="btn-close" onclick="playSound('click'); document.getElementById('schedule-overlay').style.display='none'">✕</div>
+        <span class="label">Agenda de Batalla</span>
+        <div id="schedule-content"></div>
+    </div>
+</div>
+
+<div id="custom-modal" style="display:none;"><div class="overlay-box"><div class="btn-close" onclick="playSound('click'); document.getElementById('custom-modal').style.display='none'">✕</div><span class="label">Forjar Movimiento</span><input type="text" id="custom-name" placeholder="Ej: Press Ruso"><input type="text" id="custom-desc" placeholder="Ej: 5x5"><button class="btn-main" onclick="saveCustomExercise()">Añadir a la Sesión</button></div></div>
+
+<div id="timer-overlay" style="display:none;">
+    <div class="overlay-box" style="text-align:center;">
+        <span class="label" style="border:none;">Descanso Activo</span>
+        <h1 id="timer-text" style="font-family:'Cinzel', serif; font-size:4rem; color:var(--accent); text-shadow:0 0 20px rgba(212,175,55,0.4); margin:20px 0;">03:00</h1>
+        <button class="btn-main" style="border-color:#555; color:#aaa;" onclick="stopTimer()">Terminar Descanso</button>
+    </div>
+</div>
+
+<div id="boss-overlay" style="display:none;">
+    <div class="overlay-box blood-box">
+        <div class="btn-close" onclick="playSound('click'); document.getElementById('boss-overlay').style.display='none'">✕</div>
+        <span class="label" style="color:var(--blood); border-color:var(--blood);">⚔️ PRUEBA DE ASCENSIÓN ⚔️</span>
+        <p style="font-size:0.85rem; color:#aaa; margin-bottom:20px; line-height:1.6;">Tu límite de LP ha sido alcanzado. Demuestra tu fuerza real para ascender.</p>
+        <h2 id="boss-title" style="font-family:'Cinzel', serif; margin:20px 0; color:#fff; font-size:1.8rem; text-shadow:0 0 15px rgba(255,0,0,0.5);">Jefe de Bronce</h2>
+        <div id="boss-task" style="background:#000; border:1px solid #333; padding:25px; border-radius:15px; margin-bottom:25px; color:var(--accent); font-weight:800; font-size:1.2rem; letter-spacing:1px; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);"></div>
+        <button class="btn-main btn-boss" style="display:block; width:100%; border-color:var(--blood); background:var(--blood-dim); color:#ff4d4d;" onclick="completeBoss()">Prueba Superada</button>
+    </div>
+</div>
+
+<div id="main-app" style="display:none;">
+    <div class="header">
+        <button class="btn-agenda" onclick="showSchedule()">[ Agenda ]</button>
+        <button class="btn-timer" onclick="startTimer(180)">⏱️ 3:00</button>
+        <div class="rpg-inv" id="inv">
+            <span class="weapon" title="Madera">🗡️</span><span class="weapon" title="Bronce">🪓</span><span class="weapon" title="Plata">⚔️</span><span class="weapon" title="Oro">🔱</span><span class="weapon" title="God">👑</span>
+        </div>
+        <h1 class="rank-name" id="ui-rank">Madera III</h1>
+        <div class="bar-bg"><div class="bar-fill" id="ui-fill"></div></div>
+        
+        <div style="text-align:center; font-size:10px; color:#888; font-family:'Cinzel', serif; font-weight:800; text-transform:uppercase; letter-spacing:2px; margin-top:8px;">
+            <span id="ui-xp">0 / 500 LP</span>
+        </div>
+        <button class="btn-boss" id="btn-trial-trigger" onclick="showBoss()">ENFRENTAR PRUEBA DE ASCENSIÓN</button>
+    </div>
+
+    <div id="v-templo" class="view active">
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="label" style="margin-bottom:0; border:none; padding:0;">Fuerza Pura <span class="lp-tag">+200 LP</span></span>
+                <span id="day-lbl" style="font-size:11px; color:#666; font-weight:800; text-transform:uppercase; letter-spacing:2px;">DÍA</span>
+            </div>
+            <div style="height:1px; background:rgba(255,255,255,0.05); margin:20px 0;"></div>
+            <div class="loc-selector">
+                <button class="loc-btn active" id="btn-casa" onclick="setLoc('casa')">Casa (Bodyweight)</button>
+                <button class="loc-btn" id="btn-gym" onclick="setLoc('gym')">Gym (Hierro)</button>
+            </div>
+            <div id="routine-area"></div>
+            <button class="btn-main" style="background:transparent; border-style:dashed; color:#666; border-color:#333; margin-top:20px;" onclick="playSound('click'); document.getElementById('custom-modal').style.display='flex'">[ + Forjar Ejercicio Extra ]</button>
+            <button class="btn-main" onclick="addXP(200, 'Fuerza Sellada')">Sellar Entrenamiento</button>
+        </div>
+
+        <div class="card">
+            <span class="label">Misiones de Disciplina</span>
+            <div class="ex-item"><p style="font-size:0.95rem; color:#eee; font-weight:600;">10.000 Pasos <span class="lp-tag" style="margin-left:8px;">+100 LP</span></p><button id="btn-steps" class="btn-check" onclick="completeMission('steps', 100, 'Caminata')">Sellar</button></div>
+            <div class="ex-item"><p style="font-size:0.95rem; color:#eee; font-weight:600;">Lectura (30 min) <span class="lp-tag" style="margin-left:8px;">+100 LP</span></p><button id="btn-read" class="btn-check" onclick="completeMission('read', 100, 'Lectura')">Sellar</button></div>
+            <div class="ex-item" style="border:none;"><p style="font-size:0.95rem; color:#eee; font-weight:600;">Retención / No-Fap <span class="lp-tag" style="margin-left:8px;">+150 LP</span></p><button id="btn-nofap" class="btn-check" onclick="completeMission('nofap', 150, 'Retención')">Sellar</button></div>
+        </div>
+
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="label" style="border:none; margin:0; padding:0;">Hidratación (3L)</span>
+                <span class="lp-tag">+100 LP</span>
+            </div>
+            <div class="grid-track" id="water-grid"></div>
+        </div>
+    </div>
+
+    <div id="v-reliquias" class="view">
+        <div class="card">
+            <span class="label">Tus Trofeos Inmortales</span>
+            <p style="font-size:0.8rem; color:#777; margin-bottom:15px; line-height:1.4;">Las hazañas forjadas en el silencio se revelan aquí.</p>
+            <div class="relic-grid" id="relic-area"></div>
+        </div>
+    </div>
+
+    <div id="v-oraculo" class="view">
+        <div style="height:100%; display:flex; flex-direction:column; justify-content:center; text-align:center;">
+            <span class="label" style="border:none;">Sabiduría del Día</span>
+            <p id="q-txt" style="font-family:'Playfair Display', serif; font-size:2rem; font-style:italic; line-height:1.4; color:#fff; margin-bottom:30px;"></p>
+            <p id="q-auth" style="font-family:'Cinzel', serif; font-size:12px; color:var(--accent); letter-spacing:5px;"></p>
+        </div>
+    </div>
+
+    <div id="v-stats" class="view">
+        <div class="card">
+            <span class="label">Muro de la Gloria (PRs)</span>
+            <canvas id="prChart" style="width:100%; height:200px;"></canvas>
+        </div>
+        
+        <div class="card">
+            <span class="label">Bitácora de Batalla</span>
+            <p style="font-size:0.75rem; color:#777; margin-bottom:10px;">Últimos 28 días. El oro forja al Dios.</p>
+            <div class="cal-labels">
+                <span>D1</span><span>D2</span><span>D3</span><span>D4</span><span>D5</span><span>D6</span><span>D7</span>
+            </div>
+            <div class="calendar-grid" id="cal-grid"></div>
+        </div>
+    </div>
+
+    <div id="ad-banner-container">
+        <span class="ad-placeholder-text">Espacio Publicitario Fijo</span>
+    </div>
+
+    <nav class="nav">
+        <div class="nav-i active" onclick="sv('templo')">Templo</div>
+        <div class="nav-i" onclick="sv('reliquias'); renderRelics();">Reliquias</div>
+        <div class="nav-i" onclick="sv('oraculo')">Oráculo</div>
+        <div class="nav-i" onclick="sv('stats'); updateChart(); renderCalendar();">Stats</div>
+    </nav>
+</div>
+
+<script>
+    const RANKS = ["Madera III", "Madera II", "Madera I", "Bronce III", "Bronce II", "Bronce I", "Plata III", "Plata II", "Plata I", "Oro III", "Oro II", "Oro I", "Platino III", "Platino II", "Platino I", "Diamante III", "Diamante II", "Diamante I", "Aesthetic God"];
+    const WEAPON_THRESHOLDS = [0, 3, 6, 9, 12];
+    const THRESHOLD_RANKS = [2, 5, 8, 11, 14, 17];
+    const XP_REQ = Array.from({length: 19}, (_, i) => 500 + (i * 250)); 
+    const DAYS_ES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+    // DB: RUTINAS DE FUERZA COMPLETAS RESTAURADAS (NOMBRES DETALLADOS)
+    const DB = {
+        quotes: [{t:"El hombre conquista el mundo conquistándose a sí mismo.", a:"Zenón"}, {t:"Todo lo puedo en Cristo que me fortalece.", a:"Filipenses 4:13"}, {t:"La disciplina es el puente entre metas y logros.", a:"Jim Rohn"}, {t:"Si sufres, que sea para hacerte más fuerte.", a:"Marco Aurelio"}, {t:"Vencerte a ti mismo es la victoria más grande.", a:"Platón"}, {t:"Mira que te mando que te esfuerces.", a:"Josué 1:9"}, {t:"El hierro se afila con el hierro.", a:"Proverbios 27:17"}],
+        routines: [
+            { d: "Recuperación Activa", 
+              c: [ {n:{Iniciado:"Plancha Estática", Guerrero:"Plancha con Lastre", Elite:"Plancha a 1 Brazo"}, d:{Iniciado:"3x30s", Guerrero:"4x1m", Elite:"4x45s"}, v:"Plank"}, {n:{Iniciado:"Sentadilla Libre Lenta", Guerrero:"Sentadilla Búlgara", Elite:"Pistol Squat Lenta"}, d:{Iniciado:"3x10", Guerrero:"4x12", Elite:"4x8"}, v:"Squat"}, {n:{Iniciado:"Elevación de Rodillas", Guerrero:"L-Sit Tucks", Elite:"V-Sit Perfecto"}, d:{Iniciado:"3x15", Guerrero:"4x15s", Elite:"4x15s"}, v:"Core"} ], 
+              g: [ {n:{Iniciado:"Paseo Granjero DB", Guerrero:"Paseo del Granjero", Elite:"Paseo Granjero Pesado"}, d:{Iniciado:"3x20m", Guerrero:"4x40m", Elite:"4x40m"}, v:"Farmer+Walk"}, {n:{Iniciado:"Jalón al Pecho", Guerrero:"Dominadas Libres", Elite:"Dominadas Lastradas"}, d:{Iniciado:"3x10", Guerrero:"4x8", Elite:"5x5"}, v:"Pullup"}, {n:{Iniciado:"Plancha Abdominal", Guerrero:"Rueda Abdominal", Elite:"Dragon Flag"}, d:{Iniciado:"3x45s", Guerrero:"3x10", Elite:"4x8"}, v:"Ab+Wheel"} ] },
+            { d: "Empuje Pesado (Push)", 
+              c: [ {n:{Iniciado:"Flexiones Inclinadas", Guerrero:"Flexiones Arqueras", Elite:"Flexiones a 1 Mano"}, d:{Iniciado:"3x10", Guerrero:"4x8", Elite:"5x5"}, v:"Pushup"}, {n:{Iniciado:"Flexiones de Rodillas", Guerrero:"Dominadas Explosivas", Elite:"Muscle Ups Estrictos"}, d:{Iniciado:"3x10", Guerrero:"4x8", Elite:"5x3"}, v:"Pullup"}, {n:{Iniciado:"Flexiones Pica Suaves", Guerrero:"Flexiones Pica Profundas", Elite:"Handstand Pushups (HSPU)"}, d:{Iniciado:"3x8", Guerrero:"4x8", Elite:"5x5"}, v:"Pike+Pushup"} ], 
+              g: [ {n:{Iniciado:"Press de Banca DB", Guerrero:"Press de Banca Barra", Elite:"Press de Banca Pesado"}, d:{Iniciado:"3x10", Guerrero:"5x5", Elite:"5x3"}, v:"Bench+Press"}, {n:{Iniciado:"Remo en Máquina", Guerrero:"Remo Pendlay", Elite:"Remo Pendlay Pesado"}, d:{Iniciado:"3x10", Guerrero:"5x5", Elite:"5x3"}, v:"Pendlay+Row"}, {n:{Iniciado:"Press Militar DB", Guerrero:"Press Militar Estricto", Elite:"Press Militar Pesado"}, d:{Iniciado:"3x10", Guerrero:"5x5", Elite:"5x3"}, v:"Overhead+Press"} ] },
+            { d: "Tracción Pesada (Pull)", 
+              c: [ {n:{Iniciado:"Sentadilla Asistida", Guerrero:"Pistol Squat", Elite:"Pistol Squat Lastrada"}, d:{Iniciado:"3x10", Guerrero:"4x6", Elite:"5x5"}, v:"Pistol+Squat"}, {n:{Iniciado:"Puente de Glúteo", Guerrero:"Nordic Curls Negativos", Elite:"Nordic Curls Completos"}, d:{Iniciado:"3x12", Guerrero:"4x6", Elite:"5x5"}, v:"Nordic+Curl"}, {n:{Iniciado:"Zancadas In Situ", Guerrero:"Zancadas con Salto", Elite:"Zancadas Salto Lastradas"}, d:{Iniciado:"3x12", Guerrero:"4x10", Elite:"4x10"}, v:"Lunges"} ], 
+              g: [ {n:{Iniciado:"Prensa de Piernas", Guerrero:"Sentadilla Trasera Libre", Elite:"Sentadilla con Pausa"}, d:{Iniciado:"3x10", Guerrero:"5x5", Elite:"5x3"}, v:"Barbell+Squat"}, {n:{Iniciado:"Peso Muerto Rumano DB", Guerrero:"Peso Muerto Convencional", Elite:"Peso Muerto Pesado"}, d:{Iniciado:"3x10", Guerrero:"3x5", Elite:"3x3"}, v:"Deadlift"}, {n:{Iniciado:"Extensión de Cuádriceps", Guerrero:"Prensa 45 Grados", Elite:"Prensa 45 Máxima"}, d:{Iniciado:"3x12", Guerrero:"4x10", Elite:"4x8"}, v:"Leg+Press"} ] },
+            { d: "Potencia Torso", 
+              c: [ {n:{Iniciado:"Fondos en Silla", Guerrero:"Dips Libres o Lastrados", Elite:"Dips en Anillas Lastrados"}, d:{Iniciado:"3x10", Guerrero:"4x8", Elite:"5x5"}, v:"Dips"}, {n:{Iniciado:"Remo en Puerta", Guerrero:"Remo Australiano 1 Mano", Elite:"Front Lever Tucks"}, d:{Iniciado:"3x10", Guerrero:"4x8", Elite:"4x10s"}, v:"Row"}, {n:{Iniciado:"Flexiones Normales", Guerrero:"Flexiones Diamante", Elite:"Diamante Explosivas"}, d:{Iniciado:"3x10", Guerrero:"4x10", Elite:"4x8"}, v:"Diamond+Pushup"} ], 
+              g: [ {n:{Iniciado:"Press Inclinado DB", Guerrero:"Press Inclinado Barra", Elite:"Press Inclinado Pesado"}, d:{Iniciado:"3x10", Guerrero:"5x5", Elite:"5x3"}, v:"Incline+Press"}, {n:{Iniciado:"Jalón al Pecho", Guerrero:"Dominadas Lastradas", Elite:"Dominadas Lastre Max"}, d:{Iniciado:"3x10", Guerrero:"5x5", Elite:"5x3"}, v:"Weighted+Pullup"}, {n:{Iniciado:"Elevaciones Laterales", Guerrero:"Push Press Explosivo", Elite:"Push Press Pesado"}, d:{Iniciado:"3x12", Guerrero:"4x6", Elite:"5x3"}, v:"Push+Press"} ] },
+            { d: "Potencia Pierna", 
+              c: [ {n:{Iniciado:"Sentadilla con Salto", Guerrero:"Búlgara Explosiva", Elite:"Búlgara con Salto Lastrada"}, d:{Iniciado:"3x10", Guerrero:"4x8", Elite:"5x5"}, v:"Bulgarian+Squat"}, {n:{Iniciado:"Elevación de Pelvis", Guerrero:"Glute Ham Raise (GHR)", Elite:"GHR a 1 Pierna"}, d:{Iniciado:"3x12", Guerrero:"4x8", Elite:"4x6"}, v:"GHR"}, {n:{Iniciado:"Zancada Lateral", Guerrero:"Sentadilla Cosaca", Elite:"Cosaca Lastrada"}, d:{Iniciado:"3x10", Guerrero:"4x8", Elite:"4x6"}, v:"Cossack+Squat"} ], 
+              g: [ {n:{Iniciado:"Sentadilla Copa (Goblet)", Guerrero:"Sentadilla Frontal", Elite:"Sentadilla Frontal Pesada"}, d:{Iniciado:"3x10", Guerrero:"5x5", Elite:"5x3"}, v:"Front+Squat"}, {n:{Iniciado:"PMR con Mancuernas", Guerrero:"Peso Muerto Rumano", Elite:"PMR Pesado"}, d:{Iniciado:"3x10", Guerrero:"4x8", Elite:"4x5"}, v:"RDL"}, {n:{Iniciado:"Zancadas Caminando", Guerrero:"Zancadas Pesadas DB", Elite:"Zancadas Pesadas Barra"}, d:{Iniciado:"3x12", Guerrero:"4x10", Elite:"4x8"}, v:"Barbell+Lunges"} ] },
+            { d: "Full Body Elite", 
+              c: [ {n:{Iniciado:"Flexiones en Pica", Guerrero:"Handstand Pushups Pared", Elite:"HSPU Libres"}, d:{Iniciado:"3x10", Guerrero:"5x5", Elite:"5x3"}, v:"HSPU"}, {n:{Iniciado:"Sentadilla de Cajón", Guerrero:"Pistol Squat Asistida", Elite:"Pistol Squat con Salto"}, d:{Iniciado:"3x10", Guerrero:"4x6", Elite:"4x4"}, v:"Pistol+Squat"}, {n:{Iniciado:"Dominadas Australianas", Guerrero:"Dominadas Estrictas", Elite:"Muscle Ups Estrictos"}, d:{Iniciado:"3x10", Guerrero:"5x5", Elite:"5x3"}, v:"Pullups"} ], 
+              g: [ {n:{Iniciado:"Kettlebell Swing", Guerrero:"Power Clean", Elite:"Power Clean Pesado"}, d:{Iniciado:"3x12", Guerrero:"5x3", Elite:"5x2"}, v:"Power+Clean"}, {n:{Iniciado:"Press de Banca Cerrado", Guerrero:"Banca Agarre Cerrado", Elite:"Cerrado Pesado"}, d:{Iniciado:"3x10", Guerrero:"5x5", Elite:"5x3"}, v:"Close+Grip+Bench"}, {n:{Iniciado:"Sentadilla Libre", Guerrero:"Sentadilla con Pausa", Elite:"Pausa Larga (3s)"}, d:{Iniciado:"3x10", Guerrero:"4x6", Elite:"4x3"}, v:"Pause+Squat"} ] },
+            { d: "Core & Fuerza de Agarre", 
+              c: [ {n:{Iniciado:"Cuelgue Pasivo", Guerrero:"Isometría en Dominada", Elite:"Front Lever Estricto"}, d:{Iniciado:"3x30s", Guerrero:"4x15s", Elite:"4x5s"}, v:"Isometric+Pullup"}, {n:{Iniciado:"Rodillas al Pecho", Guerrero:"Elevación de Piernas", Elite:"Toes to Bar"}, d:{Iniciado:"3x12", Guerrero:"4x10", Elite:"4x8"}, v:"Hanging+Leg+Raise"}, {n:{Iniciado:"Plancha Tocando Hombros", Guerrero:"Flexiones a 1 Mano Asis.", Elite:"Flexiones a 1 Mano Declinadas"}, d:{Iniciado:"3x12", Guerrero:"4x6", Elite:"4x5"}, v:"One+Arm+Pushup"} ], 
+              g: [ {n:{Iniciado:"PM Ligero DB", Guerrero:"Peso Muerto Sumo", Elite:"Peso Muerto Sumo Max"}, d:{Iniciado:"3x10", Guerrero:"3x5", Elite:"1x5"}, v:"Sumo+Deadlift"}, {n:{Iniciado:"Remo con Mancuerna", Guerrero:"Remo DB Pesado", Elite:"Remo Kroc"}, d:{Iniciado:"3x10", Guerrero:"4x8", Elite:"3x10"}, v:"Dumbbell+Row"}, {n:{Iniciado:"Paseo Granjero DB", Guerrero:"Paseo del Granjero", Elite:"Granjero Pesado (Trampa)"}, d:{Iniciado:"3x30m", Guerrero:"4x40m", Elite:"4x40m"}, v:"Farmer+Walk"} ] }
+        ]
+    };
+
+    const TRIALS = {
+        2: { t: "Jefe de Bronce", m: { Iniciado: "20 Flexiones Estrictas", Guerrero: "40 Flexiones Estrictas", Elite: "60 Flexiones Estrictas" } },
+        5: { t: "Jefe de Plata", m: { Iniciado: "5 Dominadas Estrictas", Guerrero: "10 Dominadas Estrictas", Elite: "15 Dominadas Estrictas" } },
+        8: { t: "Jefe de Oro", m: { Iniciado: "Sentadilla Libre: 0.5x Peso Corporal", Guerrero: "Sentadilla Libre: 1x Peso Corporal", Elite: "Sentadilla Libre: 1.5x Peso Corporal" } },
+        11: { t: "Jefe de Platino", m: { Iniciado: "Peso Muerto: 1x Peso Corporal", Guerrero: "Peso Muerto: 1.5x Peso Corporal", Elite: "Peso Muerto: 2x Peso Corporal" } },
+        14: { t: "Jefe de Diamante", m: { Iniciado: "Press Banca: 0.5x Peso Corporal", Guerrero: "Press Banca: 1x Peso Corporal", Elite: "Press Banca: 1.25x Peso Corporal" } },
+        17: { t: "Ascensión a God", m: { Iniciado: "15 Dominadas Perfectas Estrictas", Guerrero: "3 Muscle Ups Estrictos", Elite: "10 Muscle Ups Estrictos" } }
+    };
+
+    let st = { name:"", exp:"Guerrero", xp:0, rank:0, loc:"gym", water:0, done:[], prs:{}, history:[], trainingDays: [], lastDate: "", customEx:[], lastActionTime: 0, stats: {wOuts:0, prMax:0, nofap:0, read:0, steps:0, waterDays:0, seals:0} };
+    let chartInst = null;
+    let timerInt = null;
+
+    function showInterstitialAd() {
+        console.log("--- DISPARANDO ANUNCIO INTERSTICIAL ---");
+        document.getElementById('mock-interstitial').style.display = 'flex';
+    }
+    
+    function closeAd() {
+        playSound('click');
+        document.getElementById('mock-interstitial').style.display = 'none';
+    }
+
+    // AUDIO PLAYBACK PURO (Sin Fade Out en el Portal para máximo impacto)
+    function playSound(type) { 
+        try { 
+            const a = document.getElementById('sfx-'+(type==='alarm'?'alarm':type)); 
+            if(a){ 
+                if(type === 'portal') a.volume = 0.9;
+                if(type === 'click') a.volume = 0.3;     
+                if(type === 'water') a.volume = 0.6;     
+                if(type === 'success') a.volume = 0.3;   
+                if(type === 'rank') a.volume = 0.9;      
+                if(type === 'alarm') a.volume = 0.5;
+                a.currentTime = 0; 
+                let p = a.play(); 
+                if(p !== undefined) p.catch(e => console.log("Audio prevent", e)); 
+            } 
+        } catch(e){} 
+    }
+
+    function openPortal() {
+        playSound('portal'); // Sonido épico se reproduce completo y sin interrupciones
+        const portal = document.getElementById('the-portal');
+        portal.style.opacity = '0';
+
+        setTimeout(() => {
+            portal.style.display = 'none';
+            const data = localStorage.getItem('_asc_v61');
+            if(data) {
+                st = JSON.parse(data);
+                if(!st.lastActionTime) st.lastActionTime = Date.now();
+                if(!st.stats) st.stats = {wOuts:0, prMax:0, nofap:0, read:0, steps:0, waterDays:0, seals:0};
+                if(!st.trainingDays) st.trainingDays = [];
+                
+                checkDecay(); 
+                checkDay();
+                document.getElementById('main-app').style.display = 'block';
+                render();
+                renderWaterGrid();
+                renderCalendar();
+            } else {
+                document.getElementById('intro').style.display = 'flex';
+            }
+        }, 1500);
+    }
+
+    function initApp(lvl) { 
+        playSound('click'); 
+        st.name = document.getElementById('name-in').value || "Sujeto"; 
+        st.exp = lvl; 
+        st.lastDate = new Date().toDateString(); 
+        st.lastActionTime = Date.now();
+        st.trainingDays = [];
+        st.stats = {wOuts:0, prMax:0, nofap:0, read:0, steps:0, waterDays:0, seals:0};
+        save(); 
+        document.getElementById('intro').style.display='none'; 
+        document.getElementById('main-app').style.display='block';
+        render(); 
+        renderWaterGrid(); 
+        renderCalendar();
+    }
+    
+    function checkDecay() {
+        let now = Date.now();
+        let hoursInactive = (now - st.lastActionTime) / (1000 * 60 * 60);
+        if (hoursInactive > 48) {
+            let daysLost = Math.floor(hoursInactive / 24);
+            let lostLP = daysLost * 100;
+            st.xp -= lostLP;
+            if(st.xp < 0) st.xp = 0; 
+            const toast = document.getElementById('toast'); 
+            toast.innerText = `CASTIGO: -${lostLP} LP POR INACTIVIDAD`; 
+            toast.classList.add('blood');
+            toast.classList.add('show'); 
+            setTimeout(() => { toast.classList.remove('show'); toast.classList.remove('blood'); }, 5000);
+            st.lastActionTime = now;
+            save();
+        }
+    }
+
+    function checkDay() {
+        const today = new Date().toDateString();
+        if(st.lastDate !== today) {
+            st.water=0; st.done=[]; st.customEx=[]; st.lastDate = today; save();
+        }
+    }
+
+    function showToast(msg) { const toast = document.getElementById('toast'); toast.innerText = msg; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); }
+
+    function render() {
+        const displayRank = RANKS[st.rank] || "GOD";
+        document.getElementById('ui-rank').innerText = displayRank;
+        
+        const reqXP = XP_REQ[st.rank] || 99999;
+        const isCapped = THRESHOLD_RANKS.includes(st.rank) && st.xp >= reqXP;
+        const xpFill = document.getElementById('ui-fill');
+        const trialBtn = document.getElementById('btn-trial-trigger');
+
+        if(isCapped) { 
+            xpFill.classList.add('capped'); xpFill.style.width = "100%"; trialBtn.style.display = "block"; 
+            document.getElementById('ui-xp').innerText = "BLOQUEADO - DERROTA AL JEFE";
+        } else { 
+            xpFill.classList.remove('capped'); xpFill.style.width = Math.min((st.xp/reqXP*100), 100) + "%"; trialBtn.style.display = "none"; 
+            document.getElementById('ui-xp').innerText = `${st.xp} / ${reqXP} LP`;
+        }
+        
+        const w = document.querySelectorAll('.weapon');
+        w.forEach((el, i) => { if(st.rank >= WEAPON_THRESHOLDS[i]) el.classList.add('unlocked'); else el.classList.remove('unlocked'); });
+
+        const dIdx = new Date().getDay();
+        const rData = DB.routines[dIdx];
+        document.getElementById('day-lbl').innerText = rData.d;
+        
+        const exList = st.loc === 'casa' ? rData.c : rData.g;
+        let html = exList.map(ex => `
+            <div class="ex-item">
+                <div class="ex-info"><h3>${ex.n[st.exp]}</h3><p>${ex.d[st.exp]}</p></div>
+                <div class="pr-group">
+                    <a class="btn-vid" href="https://www.youtube.com/results?search_query=${ex.v}+technique+exercise" target="_blank" onclick="playSound('click')">📹</a>
+                    <input type="number" class="pr-input" value="${st.prs[ex.n[st.exp]] || ''}" onchange="savePR('${ex.n[st.exp]}', this.value)" placeholder="kg">
+                    <button class="btn-calc" onclick="playSound('click'); calcPlates('${ex.n[st.exp]}')">⚖️</button>
+                </div>
+            </div>`).join('');
+
+        html += st.customEx.map((ex, i) => `
+            <div class="ex-item">
+                <div class="ex-info"><h3>${ex.n}</h3><p>${ex.d}</p></div>
+                <div class="pr-group"><button onclick="playSound('click'); st.customEx.splice(${i},1);save();render();" style="background:none;border:none;color:red;font-size:14px;cursor:pointer;">✕</button></div>
+            </div>`).join('');
+
+        document.getElementById('routine-area').innerHTML = html;
+
+        ['steps', 'read', 'nofap'].forEach(m => { 
+            const btn = document.getElementById('btn-'+m); 
+            if(st.done.includes(m)) { btn.classList.add('done'); btn.innerText = "✔ Sellado"; } 
+            else { btn.classList.remove('done'); btn.innerText = "Sellar"; }
+        });
+
+        const q = DB.quotes[dIdx];
+        document.getElementById('q-txt').innerText = `"${q.t}"`; document.getElementById('q-auth').innerText = q.a;
+        document.getElementById('btn-casa').className = st.loc==='casa' ? 'loc-btn active' : 'loc-btn';
+        document.getElementById('btn-gym').className = st.loc==='gym' ? 'loc-btn active' : 'loc-btn';
+    }
+
+    function renderRelics() {
+        const rArea = document.getElementById('relic-area');
+        const relics = [
+            { id:'r1', icon:'🩸', n:'Primera Sangre', d:'Sellar tu primer entrenamiento.', c: st.stats.wOuts >= 1 },
+            { id:'r2', icon:'📖', n:'Chispa Mental', d:'Sellar lectura 5 veces.', c: st.stats.read >= 5 },
+            { id:'r3', icon:'🪓', n:'El Despertar', d:'Alcanzar Rango Bronce.', c: st.rank >= 3 },
+            { id:'r4', icon:'⚔️', n:'Constancia', d:'Sellar 15 entrenamientos.', c: st.stats.wOuts >= 15 },
+            { id:'r5', icon:'🛡️', n:'Alma de Plata', d:'Alcanzar Rango Plata.', c: st.rank >= 6 },
+            { id:'r6', icon:'🧘‍♂️', n:'Mente de Acero', d:'Retener energía 15 días.', c: st.stats.nofap >= 15 },
+            { id:'r7', icon:'🦍', n:'Fuerza Bruta', d:'Mover 100kg (PR).', c: st.stats.prMax >= 100 },
+            { id:'r8', icon:'🔱', n:'Sangre Dorada', d:'Alcanzar Rango Oro.', c: st.rank >= 9 },
+            { id:'r9', icon:'🌊', n:'Dios de los Mares', d:'Tomar 3L de agua 30 días.', c: st.stats.waterDays >= 30 },
+            { id:'r10', icon:'🏋️', n:'Cuerpo de Hierro', d:'Sellar 50 entrenamientos.', c: st.stats.wOuts >= 50 },
+            { id:'r11', icon:'⚙️', n:'Voluntad Platino', d:'Alcanzar Rango Platino.', c: st.rank >= 12 },
+            { id:'r12', icon:'🧠', n:'Erudito', d:'Sellar lectura 50 veces.', c: st.stats.read >= 50 },
+            { id:'r13', icon:'🐂', n:'Titán de Carga', d:'Mover 140kg (PR).', c: st.stats.prMax >= 140 },
+            { id:'r14', icon:'💎', n:'Inquebrantable', d:'Alcanzar Rango Diamante.', c: st.rank >= 15 },
+            { id:'r15', icon:'⚡', n:'Maestro de Guerra', d:'Sellar 100 entrenamientos.', c: st.stats.wOuts >= 100 },
+            { id:'r16', icon:'👁️', n:'Monje', d:'Retención por 90 días.', c: st.stats.nofap >= 90 },
+            { id:'r17', icon:'👑', n:'AESTHETIC GOD', d:'Alcanzar el último rango.', c: st.rank >= 18 },
+            { id:'r18', icon:'🐲', n:'Leviatán', d:'Mover 200kg (PR).', c: st.stats.prMax >= 200 }
+        ];
+        
+        rArea.innerHTML = relics.map(r => `
+            <div class="relic-card ${r.c ? 'unlocked' : ''}">
+                <div class="relic-icon">${r.icon}</div>
+                <div class="relic-name">${r.n}</div>
+                <div class="relic-desc">${r.d}</div>
+            </div>
+        `).join('');
+    }
+
+    // CALENDARIO (BITÁCORA)
+    function renderCalendar() {
+        let html = '';
+        for(let i = 27; i >= 0; i--) {
+            let d = new Date();
+            d.setDate(d.getDate() - i);
+            let ds = d.toDateString();
+            let isDone = st.trainingDays && st.trainingDays.includes(ds);
+            html += `<div class="cal-day ${isDone ? 'done' : ''}">${d.getDate()}</div>`;
+        }
+        document.getElementById('cal-grid').innerHTML = html;
+    }
+
+    function startTimer(sec) {
+        playSound('click');
+        document.getElementById('timer-overlay').style.display = 'flex';
+        let t = sec;
+        document.getElementById('timer-text').innerText = formatT(t);
+        clearInterval(timerInt);
+        timerInt = setInterval(() => {
+            t--;
+            document.getElementById('timer-text').innerText = formatT(t);
+            if(t <= 0) {
+                clearInterval(timerInt);
+                playSound('alarm');
+                document.getElementById('timer-text').innerText = "00:00";
+            }
+        }, 1000);
+    }
+    function stopTimer() { playSound('click'); clearInterval(timerInt); document.getElementById('timer-overlay').style.display = 'none'; }
+    function formatT(s) { let m=Math.floor(s/60); let ss=s%60; return `0${m}:${ss<10?'0':''}${ss}`; }
+
+    function saveCustomExercise() {
+        const name = document.getElementById('custom-name').value;
+        const desc = document.getElementById('custom-desc').value;
+        if(name && desc) { st.customEx.push({n:name, d:desc}); document.getElementById('custom-modal').style.display='none'; document.getElementById('custom-name').value=''; document.getElementById('custom-desc').value=''; playSound('click'); save(); render(); }
+    }
+
+    // AGENDA TÁCTICA RESTAURADA (Con saltos de línea claros y diseño limpio)
+    function showSchedule() {
+        playSound('click');
+        let html = '<div class="agenda-timeline">'; const currentDay = new Date().getDay();
+        DB.routines.forEach((r, idx) => { 
+            html += `<div class="agenda-card ${idx === currentDay ? 'today' : ''}">
+                        <div class="agenda-day-title"><span>${DAYS_ES[idx]}</span>${idx === currentDay ? '<span style="color:#000; background:var(--accent); padding:2px 6px; border-radius:4px;">HOY</span>' : ''}</div>
+                        <div class="agenda-focus">${r.d}</div>
+                        <div class="agenda-details">
+                            <div><b>Gym</b><br>${r.g.map(ex => "• "+ex.n[st.exp]).join('<br>')}</div>
+                            <div><b>Casa</b><br>${r.c.map(ex => "• "+ex.n[st.exp]).join('<br>')}</div>
+                        </div>
+                    </div>`; 
+        });
+        html += '</div>';
+        document.getElementById('schedule-content').innerHTML = html; document.getElementById('schedule-overlay').style.display = 'flex';
+    }
+
+    function showBoss() { 
+        playSound('click'); 
+        const trialData = TRIALS[st.rank]; 
+        document.getElementById('boss-title').innerText = trialData.t; 
+        document.getElementById('boss-task').innerText = trialData.m[st.exp]; 
+        document.getElementById('boss-overlay').style.display = 'flex'; 
+    }
+    
+    function completeBoss() { 
+        playSound('rank'); // Sonido épico ininterrumpido
+        document.getElementById('boss-overlay').style.display = 'none'; 
+        st.xp -= XP_REQ[st.rank]; 
+        st.rank++; 
+        st.lastActionTime = Date.now();
+        document.getElementById('epic-rank-text').innerText = RANKS[st.rank]; 
+        document.getElementById('epic-rank-up').classList.add('active'); 
+        
+        // El anuncio de pantalla completa se dispara DESPUÉS de los 6 segundos de gloria
+        setTimeout(() => { 
+            document.getElementById('epic-rank-up').classList.remove('active'); 
+            showInterstitialAd();
+            checkRankUp(); 
+        }, 6000); 
+        save(); render(); 
+    }
+
+    function renderWaterGrid() { 
+        document.getElementById('water-grid').innerHTML = Array.from({length:12}).map((_, i) => 
+            `<div class="cube ${i < st.water ? 'filled' : ''}" id="cube-${i}" onclick="fillW(${i})">
+                <div class="fill" id="fill-${i}" style="height:${i < st.water ? '100%' : '0%'}"></div>
+             </div>`
+        ).join(''); 
+    }
+
+    function fillW(i) { 
+        if(i === st.water) { 
+            st.water++; 
+            playSound('water'); 
+            st.lastActionTime = Date.now();
+            const cube = document.getElementById(`cube-${i}`);
+            const fill = document.getElementById(`fill-${i}`);
+            if(cube && fill) { fill.style.height = '100%'; cube.classList.add('filled'); }
+            
+            if (st.water % 3 === 0) {
+                setTimeout(() => showInterstitialAd(), 500);
+            }
+
+            if(st.water === 12) { 
+                setTimeout(()=>playSound('success'), 600); 
+                addXP(100, "Hidratacion"); 
+            }
+            save(); 
+        } 
+    }
+
+    function addXP(n, rsn) { 
+        if(!st.done.includes(rsn)) { 
+            st.xp += n; 
+            st.done.push(rsn); 
+            st.lastActionTime = Date.now();
+            
+            if(rsn === 'Fuerza Sellada') {
+                st.stats.wOuts++;
+                let todayStr = new Date().toDateString();
+                if(!st.trainingDays.includes(todayStr)) st.trainingDays.push(todayStr);
+            }
+            if(rsn === 'read') st.stats.read++;
+            if(rsn === 'steps') st.stats.steps++;
+            if(rsn === 'nofap') st.stats.nofap++;
+            if(rsn === 'Hidratacion') st.stats.waterDays++;
+            
+            playSound('success'); 
+            showToast(`⚡ +${n} LP`); 
+            
+            st.stats.seals++;
+            if (st.stats.seals % 2 === 0) {
+                setTimeout(() => showInterstitialAd(), 800);
+            }
+
+            checkRankUp(); 
+            save(); render(); 
+        } 
+    }
+    
+    function completeMission(id, lp, title) { addXP(lp, id); }
+    
+    function checkRankUp() { 
+        let req = XP_REQ[st.rank] || 99999;
+        if (st.xp >= req && !THRESHOLD_RANKS.includes(st.rank)) { 
+            st.xp -= req; 
+            st.rank++; 
+            
+            playSound('rank'); // Sonido ininterrumpido
+            document.getElementById('epic-rank-text').innerText = RANKS[st.rank] || "GOD"; 
+            document.getElementById('epic-rank-up').classList.add('active'); 
+            
+            // El anuncio espera su turno
+            setTimeout(() => { 
+                document.getElementById('epic-rank-up').classList.remove('active'); 
+                showInterstitialAd();
+                checkRankUp(); 
+            }, 6000); 
+        } 
+    }
+
+    function calcPlates(exName) { const weight = parseFloat(st.prs[exName]); if(!weight || weight <= 20) { showOverlay("PR > 20kg requerido"); return; } let side = (weight - 20) / 2; let res = `<span style="color:var(--accent); font-size:1.4rem;">${weight}kg Objetivo</span><br><br>Carga por lado:<br><br>`; [20, 15, 10, 5, 2.5, 1.25].forEach(p => { let cant = Math.floor(side / p); if(cant > 0) { res += `<b>${cant}</b> disco(s) de ${p}kg<br>`; side -= cant * p; } }); showOverlay(res); }
+
+    function savePR(k, v) { 
+        if(!v) return; 
+        playSound('click'); 
+        st.prs[k] = v; 
+        st.lastActionTime = Date.now();
+        let val = parseFloat(v);
+        st.history.push({ex: k, val: val}); 
+        if(val > st.stats.prMax) st.stats.prMax = val; 
+        showToast("Carga Registrada"); save(); 
+    }
+
+    function updateChart() {
+        const ctx = document.getElementById('prChart').getContext('2d');
+        if(chartInst) chartInst.destroy();
+        const recent = st.history.slice(-10);
+        let gradient = ctx.createLinearGradient(0, 0, 0, 200);
+        gradient.addColorStop(0, 'rgba(212, 175, 55, 0.4)');
+        gradient.addColorStop(1, 'rgba(212, 175, 55, 0.0)');
+        chartInst = new Chart(ctx, { type: 'line', data: { labels: recent.map(h => h.ex.substring(0,5)), datasets: [{ label: 'kg', data: recent.map(h => h.val), borderColor: '#d4af37', backgroundColor: gradient, fill: true, tension: 0.4, borderWidth: 2, pointBackgroundColor: '#fff', pointRadius: 4 }] }, options: { plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } }, x: { grid: { display: false }, ticks: { color: '#888' } } } } });
+    }
+
+    function setLoc(l) { playSound('click'); st.loc = l; save(); render(); }
+    function sv(v) { playSound('click'); document.querySelectorAll('.view, .nav-i').forEach(e => e.classList.remove('active')); document.getElementById('v-'+v).classList.add('active'); event.currentTarget.classList.add('active'); }
+    function showOverlay(c) { document.getElementById('over-content').innerHTML = c; document.getElementById('overlay').style.display = 'flex'; }
+    function save() { localStorage.setItem('_asc_v61', JSON.stringify(st)); }
+</script>
+</body>
+</html>
