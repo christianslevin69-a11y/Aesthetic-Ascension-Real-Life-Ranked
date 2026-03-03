@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#030303">
     <link rel="manifest" href='data:application/manifest+json;utf8,{"name":"Aesthetic Ascension","short_name":"Ascension","display":"standalone","background_color":"#030303","theme_color":"#030303"}'>
     
-    <title>Aesthetic Ascension | V61 Legendary Legacy</title>
+    <title>Aesthetic Ascension | V62</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@1,500;1,700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -400,17 +400,20 @@
         const portal = document.getElementById('the-portal');
         portal.style.opacity = '0';
 
+        // --- CORTE DEL AUDIO A LA MITAD DE TIEMPO (750ms) ---
         setTimeout(() => {
-            portal.style.display = 'none';
-            
-            // --- CORTE EXACTO DEL AUDIO DEL PORTAL ---
             const portalAudio = document.getElementById('sfx-portal');
             if(portalAudio) {
                 portalAudio.pause();
             }
-            // -----------------------------------------
+        }, 750);
+        // ----------------------------------------------------
 
-            const data = localStorage.getItem('_asc_v61');
+        setTimeout(() => {
+            portal.style.display = 'none';
+            
+            // Mantengo el v61 para que no pierdas tu progreso anterior
+            const data = localStorage.getItem('_asc_v61'); 
             if(data) {
                 st = JSON.parse(data);
                 if(!st.lastActionTime) st.lastActionTime = Date.now();
