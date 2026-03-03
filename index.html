@@ -124,7 +124,7 @@
         .overlay-box::-webkit-scrollbar { display: none; }
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-        /* CIERRE DE MODAL FIJO (PARA QUE NO SE PIERDA AL HACER SCROLL) */
+        /* CIERRE DE MODAL FIJO */
         .btn-close { position: fixed; top: 20px; right: 20px; font-size: 1.2rem; color: #fff; background: rgba(0,0,0,0.6); border: 1px solid #444; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; font-family: sans-serif; z-index: 3000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .btn-close:active { transform: scale(0.8); background: var(--accent); color: #000; border-color: var(--accent); }
 
@@ -378,7 +378,6 @@
         document.getElementById('mock-interstitial').style.display = 'none';
     }
 
-    // AUDIO PLAYBACK PURO (Sin Fade Out en el Portal para máximo impacto)
     function playSound(type) { 
         try { 
             const a = document.getElementById('sfx-'+(type==='alarm'?'alarm':type)); 
@@ -397,12 +396,20 @@
     }
 
     function openPortal() {
-        playSound('portal'); // Sonido épico se reproduce completo y sin interrupciones
+        playSound('portal'); 
         const portal = document.getElementById('the-portal');
         portal.style.opacity = '0';
 
         setTimeout(() => {
             portal.style.display = 'none';
+            
+            // --- CORTE EXACTO DEL AUDIO DEL PORTAL ---
+            const portalAudio = document.getElementById('sfx-portal');
+            if(portalAudio) {
+                portalAudio.pause();
+            }
+            // -----------------------------------------
+
             const data = localStorage.getItem('_asc_v61');
             if(data) {
                 st = JSON.parse(data);
@@ -552,7 +559,6 @@
         `).join('');
     }
 
-    // CALENDARIO (BITÁCORA)
     function renderCalendar() {
         let html = '';
         for(let i = 27; i >= 0; i--) {
@@ -590,7 +596,6 @@
         if(name && desc) { st.customEx.push({n:name, d:desc}); document.getElementById('custom-modal').style.display='none'; document.getElementById('custom-name').value=''; document.getElementById('custom-desc').value=''; playSound('click'); save(); render(); }
     }
 
-    // AGENDA TÁCTICA RESTAURADA (Con saltos de línea claros y diseño limpio)
     function showSchedule() {
         playSound('click');
         let html = '<div class="agenda-timeline">'; const currentDay = new Date().getDay();
@@ -617,7 +622,7 @@
     }
     
     function completeBoss() { 
-        playSound('rank'); // Sonido épico ininterrumpido
+        playSound('rank'); 
         document.getElementById('boss-overlay').style.display = 'none'; 
         st.xp -= XP_REQ[st.rank]; 
         st.rank++; 
@@ -625,7 +630,6 @@
         document.getElementById('epic-rank-text').innerText = RANKS[st.rank]; 
         document.getElementById('epic-rank-up').classList.add('active'); 
         
-        // El anuncio de pantalla completa se dispara DESPUÉS de los 6 segundos de gloria
         setTimeout(() => { 
             document.getElementById('epic-rank-up').classList.remove('active'); 
             showInterstitialAd();
@@ -700,11 +704,10 @@
             st.xp -= req; 
             st.rank++; 
             
-            playSound('rank'); // Sonido ininterrumpido
+            playSound('rank'); 
             document.getElementById('epic-rank-text').innerText = RANKS[st.rank] || "GOD"; 
             document.getElementById('epic-rank-up').classList.add('active'); 
             
-            // El anuncio espera su turno
             setTimeout(() => { 
                 document.getElementById('epic-rank-up').classList.remove('active'); 
                 showInterstitialAd();
