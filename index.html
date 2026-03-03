@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#030303">
     <link rel="manifest" href='data:application/manifest+json;utf8,{"name":"Aesthetic Ascension","short_name":"Ascension","display":"standalone","background_color":"#030303","theme_color":"#030303"}'>
     
-    <title>Aesthetic Ascension | V62</title>
+    <title>Aesthetic Ascension | V62 Monetized</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@1,500;1,700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -25,13 +25,8 @@
         body { background: var(--bg-grad); background-color: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; letter-spacing: -0.01em; }
         ::-webkit-scrollbar { display: none; }
 
-        /* AD BANNER CONTAINER */
-        #ad-banner-container { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); width: 320px; height: 50px; background: rgba(10,10,10,0.8); border: 1px solid #222; border-radius: 8px; display: flex; justify-content: center; align-items: center; z-index: 900; backdrop-filter: blur(10px); }
-        .ad-placeholder-text { font-family: 'Inter', sans-serif; font-size: 10px; color: #444; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
-
-        /* SIMULADOR DE ANUNCIO PANTALLA COMPLETA */
-        #mock-interstitial { position: fixed; inset: 0; background: #050505; z-index: 99999; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-        .ad-close-btn { position: absolute; top: 25px; right: 25px; background: rgba(255,255,255,0.1); border: 1px solid #444; color: #fff; width: 35px; height: 35px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        /* AD BANNER CONTAINER - AJUSTADO PARA EL IFRAME DE ADSTERRA */
+        #ad-banner-container { position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%); width: 320px; height: 50px; background: rgba(10,10,10,0.8); border-radius: 8px; display: flex; justify-content: center; align-items: center; z-index: 900; overflow: hidden; box-shadow: 0 0 15px rgba(0,0,0,0.8); }
         
         /* PORTAL INTRO */
         #the-portal { position: fixed; inset: 0; background: #000; z-index: 50000; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; transition: opacity 1.5s ease; }
@@ -188,15 +183,6 @@
     </div>
 </div>
 
-<div id="mock-interstitial">
-    <span style="color:#555; font-size:10px; position:absolute; top:35px; left:25px; letter-spacing:2px;">ADVERTISEMENT</span>
-    <button class="ad-close-btn" onclick="closeAd()">✕</button>
-    <div style="width:80%; padding:40px 20px; border:1px solid #333; border-radius:10px; background:#111;">
-        <h2 style="color:var(--accent); font-family:'Cinzel',serif; margin-bottom:15px;">PUBLICIDAD ACTIVA</h2>
-        <p style="color:#888; font-size:0.9rem; line-height:1.5;">(Start.io / Unity Ads mostrará un video aquí.)</p>
-    </div>
-</div>
-
 <div id="overlay" style="display:none;"><div class="overlay-box"><div class="btn-close" onclick="playSound('click'); document.getElementById('overlay').style.display='none'">✕</div><span class="label">Calculadora de Discos</span><div id="over-content" style="font-size:1.2rem; color:#bbb; line-height:2;"></div></div></div>
 
 <div id="schedule-overlay" style="display:none;">
@@ -309,7 +295,16 @@
     </div>
 
     <div id="ad-banner-container">
-        <span class="ad-placeholder-text">Espacio Publicitario Fijo</span>
+        <script type="text/javascript">
+            atOptions = {
+                'key' : 'f396f4562c799b80837044f23415b4a3',
+                'format' : 'iframe',
+                'height' : 50,
+                'width' : 320,
+                'params' : {}
+            };
+        </script>
+        <script type="text/javascript" src="https://www.highperformanceformat.com/f396f4562c799b80837044f23415b4a3/invoke.js"></script>
     </div>
 
     <nav class="nav">
@@ -327,7 +322,6 @@
     const XP_REQ = Array.from({length: 19}, (_, i) => 500 + (i * 250)); 
     const DAYS_ES = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
-    // DB: RUTINAS DE FUERZA COMPLETAS RESTAURADAS (NOMBRES DETALLADOS)
     const DB = {
         quotes: [{t:"El hombre conquista el mundo conquistándose a sí mismo.", a:"Zenón"}, {t:"Todo lo puedo en Cristo que me fortalece.", a:"Filipenses 4:13"}, {t:"La disciplina es el puente entre metas y logros.", a:"Jim Rohn"}, {t:"Si sufres, que sea para hacerte más fuerte.", a:"Marco Aurelio"}, {t:"Vencerte a ti mismo es la victoria más grande.", a:"Platón"}, {t:"Mira que te mando que te esfuerces.", a:"Josué 1:9"}, {t:"El hierro se afila con el hierro.", a:"Proverbios 27:17"}],
         routines: [
@@ -368,14 +362,12 @@
     let chartInst = null;
     let timerInt = null;
 
+    // --- FUNCIÓN DE ANUNCIO DIRECTO ADSTERRA INYECTADA ---
     function showInterstitialAd() {
-        console.log("--- DISPARANDO ANUNCIO INTERSTICIAL ---");
-        document.getElementById('mock-interstitial').style.display = 'flex';
-    }
-    
-    function closeAd() {
-        playSound('click');
-        document.getElementById('mock-interstitial').style.display = 'none';
+        console.log("--- ABRIENDO ANUNCIO DIRECTO ---");
+        
+        let urlAnuncio = 'https://www.effectivegatecpm.com/xswwvu1dx?key=faa04b19662b09d17252209585c03f12';
+        window.open(urlAnuncio, '_blank');
     }
 
     function playSound(type) { 
@@ -400,19 +392,16 @@
         const portal = document.getElementById('the-portal');
         portal.style.opacity = '0';
 
-        // --- CORTE DEL AUDIO A LA MITAD DE TIEMPO (750ms) ---
         setTimeout(() => {
             const portalAudio = document.getElementById('sfx-portal');
             if(portalAudio) {
                 portalAudio.pause();
             }
         }, 750);
-        // ----------------------------------------------------
 
         setTimeout(() => {
             portal.style.display = 'none';
             
-            // Mantengo el v61 para que no pierdas tu progreso anterior
             const data = localStorage.getItem('_asc_v61'); 
             if(data) {
                 st = JSON.parse(data);
